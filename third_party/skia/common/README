@@ -1,0 +1,13 @@
+This repository contains code shared by the skia and skia-buildbot repositories.
+
+The file layout is done by language, such as the following directories
+for Python, Go and Javascript libraries.
+
+  /py
+  /go
+  /js
+
+This repository is pulled into both https://skia.googlesource.com/skia/
+and https://skia.googlesource.com/buildbot as /common in both repositories
+so that references to common files should be the same regardless
+of which repository the code is in.

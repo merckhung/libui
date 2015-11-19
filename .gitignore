@@ -1,0 +1,10 @@
+out/
+*.o
+*.a
+*.so
+.cproject
+.project
+*.pyc
+.settings/
+*.swp
+/Debug/

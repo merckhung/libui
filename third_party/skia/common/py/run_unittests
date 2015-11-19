@@ -1,0 +1,62 @@
+#!/usr/bin/env python
+# Copyright (c) 2012 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+"""Runs all unit tests under this base directory."""
+
+import os
+import subprocess
+import sys
+import unittest
+
+
+NO_CRAWL_DIRS = [
+  '.git',
+  '.svn',
+]
+
+
+SEARCH_PATH = os.path.dirname(os.path.abspath(__file__))
+
+
+def FilterDirectory(dirpath, filenames):
+  """ Determine whether to look for tests in the given directory.
+
+  dirpath: string; path of the directory in question.
+  filenames: list of strings; the files in the directory.
+  """
+  if not dirpath or not filenames:
+    return False
+  for no_crawl_dir in NO_CRAWL_DIRS:
+    if no_crawl_dir in dirpath:
+      return False
+  return True
+
+
+if __name__ == '__main__':
+  print 'Searching for tests.'
+  tests_to_run = []
+
+  for (dirpath, dirnames, filenames) in os.walk(SEARCH_PATH, topdown=True):
+    dirnames[:] = [d for d in dirnames if not d in NO_CRAWL_DIRS]
+    test_modules = [os.path.join(dirpath, filename) for filename in filenames
+                    if filename.endswith('_test.py')]
+    if not test_modules:
+      continue
+    tests_to_run.extend(test_modules)
+
+  print 'Found %d tests.' % len(tests_to_run)
+  errors = []
+  for test in tests_to_run:
+    proc = subprocess.Popen(['python', test], stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT)
+    if proc.wait() != 0:
+      errors.append(proc.communicate()[0])
+  if errors:
+    for error in errors:
+      print error
+    print 'Failed %d of %d.' % (len(errors), len(test_modules))
+    sys.exit(1)
+  else:
+    print 'All tests succeeded.'
