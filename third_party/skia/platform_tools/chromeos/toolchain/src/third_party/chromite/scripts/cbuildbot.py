@@ -520,7 +520,7 @@ class DistributedBuilder(SimpleBuilder):
         not results_lib.Results.WasStageSuccessful(name)):
       should_publish_changes = False
     else:
-      should_publish_changes = (self.build_config['master'] and
+      should_publish_changes = (self.build_config['main'] and
                                 was_build_successful)
 
     if should_publish_changes:
@@ -888,8 +888,8 @@ def _CreateParser():
                    help='Attach an optional description to a --remote run '
                         'to make it easier to identify the results when it '
                         'finishes')
-  group.add_option('--slaves', action='extend', default=[],
-                   help='Specify specific remote tryslaves to run on (e.g. '
+  group.add_option('--subordinates', action='extend', default=[],
+                   help='Specify specific remote trysubordinates to run on (e.g. '
                         'build149-m2); if the bot is busy, it will be queued')
   group.add_option('--test-tryjob', action='store_true',
                    default=False,
@@ -1109,8 +1109,8 @@ def _FinishParsing(options, args):
       cros_build_lib.Die('Multiple configs not supported if not running with '
                          '--remote.  Got %r', args)
 
-    if options.slaves:
-      cros_build_lib.Die('Cannot use --slaves if not running with --remote.')
+    if options.subordinates:
+      cros_build_lib.Die('Cannot use --subordinates if not running with --remote.')
 
     release_mode_with_patches = (options.buildbot and patches and
                                  not options.debug)

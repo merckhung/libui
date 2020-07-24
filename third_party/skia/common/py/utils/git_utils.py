@@ -84,9 +84,9 @@ def Fetch(remote=None):
   shell_utils.run(cmd)
 
 
-def GetRemoteMasterHash(git_url):
+def GetRemoteMainHash(git_url):
   return shell_utils.run([GIT, 'ls-remote', git_url, '--verify',
-                          'refs/heads/master']).rstrip()
+                          'refs/heads/main']).rstrip()
 
 
 def GetCurrentBranch():
@@ -97,7 +97,7 @@ class GitBranch(object):
   """Class to manage git branches.
 
   This class allows one to create a new branch in a repository to make changes,
-  then it commits the changes, switches to master branch, and deletes the
+  then it commits the changes, switches to main branch, and deletes the
   created temporary branch upon exit.
   """
   def __init__(self, branch_name, commit_msg, upload=True, commit_queue=False,
@@ -111,11 +111,11 @@ class GitBranch(object):
 
   def __enter__(self):
     shell_utils.run([GIT, 'reset', '--hard', 'HEAD'])
-    shell_utils.run([GIT, 'checkout', 'master'])
+    shell_utils.run([GIT, 'checkout', 'main'])
     if self._branch_name in shell_utils.run([GIT, 'branch']):
       shell_utils.run([GIT, 'branch', '-D', self._branch_name])
     shell_utils.run([GIT, 'checkout', '-b', self._branch_name,
-                     '-t', 'origin/master'])
+                     '-t', 'origin/main'])
     return self
 
   def commit_and_upload(self, use_commit_queue=False):
@@ -144,7 +144,7 @@ class GitBranch(object):
         if exc_type is None:
           self.commit_and_upload(use_commit_queue=self._commit_queue)
       finally:
-        shell_utils.run([GIT, 'checkout', 'master'])
+        shell_utils.run([GIT, 'checkout', 'main'])
         if self._delete_when_finished:
           shell_utils.run([GIT, 'branch', '-D', self._branch_name])
 

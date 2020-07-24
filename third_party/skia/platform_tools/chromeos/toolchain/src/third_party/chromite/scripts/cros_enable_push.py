@@ -25,11 +25,11 @@ the path of a repo checkout you'd like to configure.
 Once that has been done, what would've been (for example):
 
 git push ssh://gerrit.chromium.org:29418/chromiumos/chromite\
- HEAD:refs/for/master
+ HEAD:refs/for/main
 
 Can now be done as:
 
-git push cros HEAD:refs/for/master
+git push cros HEAD:refs/for/main
 """)
 
 def main(argv):

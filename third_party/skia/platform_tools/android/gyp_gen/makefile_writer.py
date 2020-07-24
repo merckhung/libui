@@ -121,7 +121,7 @@ SKIA_TOOLS = (
 # benchmark (timings)
 include $(BASE_PATH)/bench/Android.mk
 
-# diamond-master (one test to rule them all)
+# diamond-main (one test to rule them all)
 include $(BASE_PATH)/dm/Android.mk
 """
 )

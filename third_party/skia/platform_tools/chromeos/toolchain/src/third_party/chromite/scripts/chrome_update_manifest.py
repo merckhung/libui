@@ -54,7 +54,7 @@ MANIFEST_FILE = 'gerrit-source.xml'
 INCLUDE_TARGET = 'full.xml'
 
 
-def _MkProject(path, name, remote, branch='master'):
+def _MkProject(path, name, remote, branch='main'):
   return _PROJECT % {'path':path, 'name':name, 'remote':remote,
                      'ref':'refs/heads/%s' % (branch,)}
 
@@ -109,7 +109,7 @@ class Manifest(object):
   def SyncSources(self):
     repo = repository.RepoRepository(
         self.manifest_dir, self.repo_root, referenced_repo=self.reference,
-        manifest=MANIFEST_FILE, branch='master')
+        manifest=MANIFEST_FILE, branch='main')
     # Trigger the network sync
     repo.Sync(jobs=multiprocessing.cpu_count() + 1, network_only=True)
     projects = [self.CHROMIUM_ROOT]
@@ -134,7 +134,7 @@ class Manifest(object):
     # Prepare git repo for push
     git.CreatePushBranch(
         TEST_BRANCH, self.manifest_dir,
-        remote_push_branch=('origin', 'refs/heads/master'))
+        remote_push_branch=('origin', 'refs/heads/main'))
 
     content = StringIO.StringIO()
     content.write(_TYPE_MARKER % {'type': 'EXTERNAL'})
@@ -253,7 +253,7 @@ def main(argv=None):
     if os.path.exists(manifest_dir):
       git.CleanAndCheckoutUpstream(manifest_dir)
       git.RunGit(manifest_dir,
-                 ['checkout', '-B', 'master', '-t', 'origin/master'])
+                 ['checkout', '-B', 'main', '-t', 'origin/main'])
     else:
       repository.CloneGitRepo(manifest_dir, manifest_url)
     m = Manifest(repo_dir, manifest_dir, internal,

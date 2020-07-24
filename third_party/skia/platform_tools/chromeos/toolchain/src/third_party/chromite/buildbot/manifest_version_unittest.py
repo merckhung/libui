@@ -145,7 +145,7 @@ class BuildSpecsManagerTest(cros_test_lib.MoxTempDirTestCase):
     self.source_repo = 'ssh://source/repo'
     self.manifest_repo = 'ssh://manifest/repo'
     self.version_file = 'version-file.sh'
-    self.branch = 'master'
+    self.branch = 'main'
     self.build_name = 'x86-generic'
     self.incr_type = 'branch'
 

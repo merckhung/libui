@@ -39,13 +39,13 @@ _FACTORY_HWID = 'hwid'
 _FULL_BINHOST = 'FULL_BINHOST'
 _PRIVATE_BINHOST_CONF_DIR = ('src/private-overlays/chromeos-partner-overlay/'
                              'chromeos/binhost')
-_GSUTIL_PATH = '/b/build/scripts/slave/gsutil'
-_GS_ACL = '/home/%(user)s/slave_archive_acl' % {'user' : getpass.getuser()}
+_GSUTIL_PATH = '/b/build/scripts/subordinate/gsutil'
+_GS_ACL = '/home/%(user)s/subordinate_archive_acl' % {'user' : getpass.getuser()}
 _BINHOST_PACKAGE_FILE = ('/usr/share/dev-install/portage/make.profile/'
                          'package.installable')
-_AUTOTEST_RPC_CLIENT = ('/b/build_internal/scripts/slave-internal/autotest_rpc/'
+_AUTOTEST_RPC_CLIENT = ('/b/build_internal/scripts/subordinate-internal/autotest_rpc/'
                         'autotest_rpc_client.py')
-_AUTOTEST_RPC_HOSTNAME = 'master2'
+_AUTOTEST_RPC_HOSTNAME = 'main2'
 _LOCAL_BUILD_FLAGS = ['--nousepkg', '--reuse_pkgs_from_local_boards']
 UPLOADED_LIST_FILENAME = 'UPLOADED'
 

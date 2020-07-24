@@ -416,7 +416,7 @@ def main(_argv):
   parser.add_option('-s', '--srcroot', default=os.path.join(os.environ['HOME'],
                                                             'trunk', 'src'),
                     help='Path to the src directory')
-  parser.add_option('-t', '--tracking_branch', default='cros/master',
+  parser.add_option('-t', '--tracking_branch', default='cros/main',
                     help='Branch we are tracking changes against')
   (options, args) = parser.parse_args()
 

@@ -261,7 +261,7 @@ DEFAULT_CQ_READY_FIELDS = {'SUBM': '0', 'CRVW': '2', 'VRIF': '1', 'COMR': '1'}
 # Some files need permissions set for several distinct groups. A google storage
 # acl (xml) file will be necessary in those cases. Make available well known
 # locations and standardize.
-KNOWN_ACL_FILES = {'slave': os.path.expanduser('~/slave_archive_acl')}
+KNOWN_ACL_FILES = {'subordinate': os.path.expanduser('~/subordinate_archive_acl')}
 
 # Environment variables that should be exposed to all children processes
 # invoked via cros_build_lib.RunCommand.

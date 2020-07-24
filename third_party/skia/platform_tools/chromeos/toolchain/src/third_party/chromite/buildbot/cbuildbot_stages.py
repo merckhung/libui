@@ -486,13 +486,13 @@ class BootstrapStage(PatchChangesStage):
   #pylint: disable=E1101
   @osutils.TempDirDecorator
   def PerformStage(self):
-    # The plan for the builders is to use master branch to bootstrap other
+    # The plan for the builders is to use main branch to bootstrap other
     # branches. Now, if we wanted to test patches for both the bootstrap code
-    # (on master) and the branched chromite (say, R20), we need to filter the
+    # (on main) and the branched chromite (say, R20), we need to filter the
     # patches by branch.
     filter_branch = self._target_manifest_branch
     if self._options.test_bootstrap:
-      filter_branch = 'master'
+      filter_branch = 'main'
 
     chromite_dir = os.path.join(self.tempdir, 'chromite')
     reference_repo = os.path.join(constants.SOURCE_ROOT, 'chromite', '.git')
@@ -690,7 +690,7 @@ class ManifestVersionedSyncStage(SyncStage):
 
   def Initialize(self):
     """Initializes a manager that manages manifests for associated stages."""
-    increment = ('build' if self._target_manifest_branch == 'master'
+    increment = ('build' if self._target_manifest_branch == 'main'
                  else 'branch')
 
     dry_run = self._options.debug
@@ -711,7 +711,7 @@ class ManifestVersionedSyncStage(SyncStage):
             force=self._force,
             branch=self._target_manifest_branch,
             dry_run=dry_run,
-            master=self._build_config['master'])
+            main=self._build_config['main'])
 
   def GetNextManifest(self):
     """Uses the initialized manifest manager to get the next manifest."""
@@ -764,7 +764,7 @@ class LKGMCandidateSyncStage(ManifestVersionedSyncStage):
 
   def _GetInitializedManager(self, internal):
     """Returns an initialized lkgm manager."""
-    increment = ('build' if self._target_manifest_branch == 'master'
+    increment = ('build' if self._target_manifest_branch == 'main'
                  else 'branch')
     return lkgm_manager.LKGMManager(
         source_repo=self.repo,
@@ -777,16 +777,16 @@ class LKGMCandidateSyncStage(ManifestVersionedSyncStage):
         force=self._force,
         branch=self._target_manifest_branch,
         dry_run=self._options.debug,
-        master=self._build_config['master'])
+        main=self._build_config['main'])
 
   def Initialize(self):
     """Override: Creates an LKGMManager rather than a ManifestManager."""
     self._InitializeRepo()
     ManifestVersionedSyncStage.manifest_manager = self._GetInitializedManager(
         self.internal)
-    if (self._build_config['master'] and
-        self._GetSlavesForMaster(self._build_config)):
-      assert self.internal, 'Unified masters must use an internal checkout.'
+    if (self._build_config['main'] and
+        self._GetSubordinatesForMain(self._build_config)):
+      assert self.internal, 'Unified mains must use an internal checkout.'
       LKGMCandidateSyncStage.sub_manager = self._GetInitializedManager(False)
 
   def ForceVersion(self, version):
@@ -803,7 +803,7 @@ class LKGMCandidateSyncStage(ManifestVersionedSyncStage):
     assert isinstance(self.manifest_manager, lkgm_manager.LKGMManager), \
         'Manifest manager instantiated with wrong class.'
 
-    if self._build_config['master']:
+    if self._build_config['main']:
       manifest = self.manifest_manager.CreateNewCandidate()
       if LKGMCandidateSyncStage.sub_manager:
         LKGMCandidateSyncStage.sub_manager.CreateFromManifest(manifest)
@@ -827,8 +827,8 @@ class CommitQueueSyncStage(LKGMCandidateSyncStage):
     self.builder_name = builder_name if builder_name else build_config['name']
 
     # The pool of patches to be picked up by the commit queue.
-    # - For the master commit queue, it's initialized in GetNextManifest.
-    # - For slave commit queues, it's initialized in SetPoolFromManifest.
+    # - For the main commit queue, it's initialized in GetNextManifest.
+    # - For subordinate commit queues, it's initialized in SetPoolFromManifest.
     #
     # In all cases, the pool is saved to disk, and refreshed after bootstrapping
     # by HandleSkip.
@@ -867,7 +867,7 @@ class CommitQueueSyncStage(LKGMCandidateSyncStage):
     self.pool = validation_pool.ValidationPool.AcquirePoolFromManifest(
         manifest, self._build_config['overlays'], self.repo,
         self._options.buildnumber, self.builder_name,
-        self._build_config['master'], self._options.debug)
+        self._build_config['main'], self._options.debug)
 
   def GetNextManifest(self):
     """Gets the next manifest using LKGM logic."""
@@ -876,7 +876,7 @@ class CommitQueueSyncStage(LKGMCandidateSyncStage):
     assert isinstance(self.manifest_manager, lkgm_manager.LKGMManager), \
         'Manifest manager instantiated with wrong class.'
 
-    if self._build_config['master']:
+    if self._build_config['main']:
       try:
         # In order to acquire a pool, we need an initialized buildroot.
         if not git.FindRepoDir(self.repo.directory):
@@ -952,19 +952,19 @@ class ImportantBuilderFailedException(Exception):
 class LKGMCandidateSyncCompletionStage(ManifestVersionedSyncCompletionStage):
   """Stage that records whether we passed or failed to build/test manifest."""
 
-  def _GetSlavesStatus(self):
+  def _GetSubordinatesStatus(self):
     if self._options.debug:
       # In debug mode, nothing is uploaded to Google Storage, so we bypass
       # the extra hop and just look at what we have locally.
       status = manifest_version.BuilderStatus.GetCompletedStatus(self.success)
       status_obj = manifest_version.BuilderStatus(status, self.message)
       return {self._bot_id: status_obj}
-    elif not self._build_config['master']:
-      # Slaves only need to look at their own status.
+    elif not self._build_config['main']:
+      # Subordinates only need to look at their own status.
       return ManifestVersionedSyncStage.manifest_manager.GetBuildersStatus(
           [self._bot_id])
     else:
-      builders = self._GetSlavesForMaster(self._build_config)
+      builders = self._GetSubordinatesForMain(self._build_config)
       manager = ManifestVersionedSyncStage.manifest_manager
       sub_manager = LKGMCandidateSyncStage.sub_manager
       if sub_manager:
@@ -981,7 +981,7 @@ class LKGMCandidateSyncCompletionStage(ManifestVersionedSyncCompletionStage):
     manifest_manager = ManifestVersionedSyncStage.manifest_manager
     if (cbuildbot_config.IsCQType(self._build_config['build_type']) and
         manifest_manager is not None and
-        self._target_manifest_branch == 'master'):
+        self._target_manifest_branch == 'main'):
       release_tag = manifest_manager.current_version
       if release_tag and not commands.HaveHWTestsBeenAborted(release_tag):
         commands.AbortHWTests(release_tag, self._options.debug)
@@ -991,8 +991,8 @@ class LKGMCandidateSyncCompletionStage(ManifestVersionedSyncCompletionStage):
     # TODO(build): Run this logic in debug mode too.
     if (not self._options.debug and
         cbuildbot_config.IsPFQType(self._build_config['build_type']) and
-        self._build_config['master'] and
-        self._target_manifest_branch == 'master' and
+        self._build_config['main'] and
+        self._target_manifest_branch == 'main' and
         ManifestVersionedSyncStage.manifest_manager is not None and
         self._build_config['build_type'] != constants.CHROME_PFQ_TYPE):
       ManifestVersionedSyncStage.manifest_manager.PromoteCandidate()
@@ -1020,7 +1020,7 @@ class LKGMCandidateSyncCompletionStage(ManifestVersionedSyncCompletionStage):
       if not self.success and self._build_config['important']:
         self._AbortCQHWTests()
 
-      statuses = self._GetSlavesStatus()
+      statuses = self._GetSubordinatesStatus()
       failing_build_dict, inflight_build_dict = {}, {}
       for builder, status in statuses.iteritems():
         if status.Failed():
@@ -1045,7 +1045,7 @@ class CommitQueueCompletionStage(LKGMCandidateSyncCompletionStage):
   """Commits or reports errors to CL's that failed to be validated."""
 
   def HandleSuccess(self):
-    if self._build_config['master']:
+    if self._build_config['main']:
       self.sync_stage.pool.SubmitPool()
       # After submitting the pool, update the commit hashes for uprevved
       # ebuilds.
@@ -1060,7 +1060,7 @@ class CommitQueueCompletionStage(LKGMCandidateSyncCompletionStage):
     super(CommitQueueCompletionStage, self).HandleValidationFailure(
         failing_statuses)
 
-    if self._build_config['master']:
+    if self._build_config['main']:
       failing_messages = [x.message for x in failing_statuses.itervalues()]
       self.sync_stage.pool.HandleValidationFailure(failing_messages)
 
@@ -1071,7 +1071,7 @@ class CommitQueueCompletionStage(LKGMCandidateSyncCompletionStage):
 
   def PerformStage(self):
     if not self.success and self._build_config['important']:
-      # This message is sent along with the failed status to the master to
+      # This message is sent along with the failed status to the main to
       # indicate a failure.
       self.message = self.sync_stage.pool.GetValidationFailedMessage()
 
@@ -2365,7 +2365,7 @@ class ArchiveStage(ArchivingStage):
         sign_types += ['firmware']
       commands.PushImages(buildroot,
                           board=board,
-                          branch_name='master',
+                          branch_name='main',
                           archive_url=upload_url,
                           dryrun=debug or not config['push_image'],
                           profile=self._options.profile or config['profile'],
@@ -2448,30 +2448,30 @@ class UploadPrebuiltsStage(BoardSpecificBuilderStage):
     return generated_args
 
   @classmethod
-  def _AddOptionsForSlave(cls, builder, board):
-    """Inner helper method to add upload_prebuilts args for a slave builder.
+  def _AddOptionsForSubordinate(cls, builder, board):
+    """Inner helper method to add upload_prebuilts args for a subordinate builder.
 
     Returns:
-      An array of options to add to upload_prebuilts array that allow a master
-      to submit prebuilt conf modifications on behalf of a slave.
+      An array of options to add to upload_prebuilts array that allow a main
+      to submit prebuilt conf modifications on behalf of a subordinate.
     """
     args = []
     builder_config = cbuildbot_config.config[builder]
     if builder_config['prebuilts']:
-      for slave_board in builder_config['boards']:
-        if builder_config['master'] and slave_board == board:
+      for subordinate_board in builder_config['boards']:
+        if builder_config['main'] and subordinate_board == board:
           # Ignore self.
           continue
 
-        args.extend(['--slave-board', slave_board])
-        slave_profile = builder_config['profile']
-        if slave_profile:
-          args.extend(['--slave-profile', slave_profile])
+        args.extend(['--subordinate-board', subordinate_board])
+        subordinate_profile = builder_config['profile']
+        if subordinate_profile:
+          args.extend(['--subordinate-profile', subordinate_profile])
 
     return args
 
   def PerformStage(self):
-    """Uploads prebuilts for master and slave builders."""
+    """Uploads prebuilts for main and subordinate builders."""
     prebuilt_type = self._prebuilt_type
     board = self._current_board
     binhosts = []
@@ -2498,21 +2498,21 @@ class UploadPrebuiltsStage(BoardSpecificBuilderStage):
       for binhost in filter(None, binhosts):
         generated_args.extend(['--previous-binhost-url', binhost])
 
-      if self._build_config['master'] and board == self._boards[-1]:
-        # The master builder updates all the binhost conf files, and needs to do
+      if self._build_config['main'] and board == self._boards[-1]:
+        # The main builder updates all the binhost conf files, and needs to do
         # so only once so as to ensure it doesn't try to update the same file
         # more than once. As multiple boards can be built on the same builder,
         # we arbitrarily decided to update the binhost conf files when we run
         # upload_prebuilts for the last board. The other boards are treated as
-        # slave boards.
+        # subordinate boards.
         generated_args.append('--sync-binhost-conf')
-        for c in self._GetSlavesForMaster(self._build_config):
+        for c in self._GetSubordinatesForMain(self._build_config):
           if c['prebuilts'] == constants.PUBLIC:
             public_builders.append(c['name'])
-            public_args.extend(self._AddOptionsForSlave(c['name'], board))
+            public_args.extend(self._AddOptionsForSubordinate(c['name'], board))
           elif c['prebuilts'] == constants.PRIVATE:
             private_builders.append(c['name'])
-            private_args.extend(self._AddOptionsForSlave(c['name'], board))
+            private_args.extend(self._AddOptionsForSubordinate(c['name'], board))
 
     # Upload the public prebuilts, if any.
     if public_builders or public:

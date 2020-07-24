@@ -30,7 +30,7 @@ import mock
 _GetNumber = iter(itertools.count()).next
 
 FAKE_PATCH_JSON = {
-  "project":"tacos/chromite", "branch":"master",
+  "project":"tacos/chromite", "branch":"main",
   "id":"Iee5c89d929f1850d7d4e1a4ff5f21adda800025f",
   "currentPatchSet": {
     "number":"2", "ref":gerrit.GetChangeRef(1112, 2),
@@ -38,7 +38,7 @@ FAKE_PATCH_JSON = {
   },
   "number":"1112",
   "subject":"chromite commit",
-  "owner":{"name":"Chromite Master", "email":"chromite@chromium.org"},
+  "owner":{"name":"Chromite Main", "email":"chromite@chromium.org"},
   "url":"http://gerrit.chromium.org/gerrit/1112",
   "lastUpdated":1311024529,
   "sortKey":"00166e8700001052",
@@ -78,7 +78,7 @@ I am the first commit.
   # ChangeId; only GerritPatches do.
   has_native_change_id = False
 
-  DEFAULT_TRACKING = 'refs/remotes/%s/master' % constants.EXTERNAL_REMOTE
+  DEFAULT_TRACKING = 'refs/remotes/%s/main' % constants.EXTERNAL_REMOTE
 
   def _CreateSourceRepo(self, path):
     """Generate a new repo with a single commit."""
@@ -108,9 +108,9 @@ I am the first commit.
     if hasattr(self, 'original_cwd'):
       os.chdir(self.original_cwd)
 
-  def _MkPatch(self, source, sha1, ref='refs/heads/master', **kwds):
+  def _MkPatch(self, source, sha1, ref='refs/heads/main', **kwds):
     return self.patch_kls(source, 'chromiumos/chromite', ref,
-                          '%s/master' % constants.EXTERNAL_REMOTE,
+                          '%s/main' % constants.EXTERNAL_REMOTE,
                           kwds.pop('remote', constants.EXTERNAL_REMOTE),
                           sha1=sha1, **kwds)
 
@@ -197,7 +197,7 @@ I am the first commit.
   def testCleanlyApply(self):
     _, git2, patch = self._CommonGitSetup()
     # Clone git3 before we modify git2; else we'll just wind up
-    # cloning it's master.
+    # cloning it's main.
     git3 = self._MakeRepo('git3', git2)
     patch.Apply(git2, self.DEFAULT_TRACKING)
     self.assertEqual(patch.sha1, self._GetSha1(git2, 'HEAD'))
@@ -213,7 +213,7 @@ I am the first commit.
   def testFailsApply(self):
     _, git2, patch1 = self._CommonGitSetup()
     patch2 = self.CommitFile(git2, 'monkeys', 'not foon')
-    # Note that Apply creates it's own branch, resetting to master
+    # Note that Apply creates it's own branch, resetting to main
     # thus we have to re-apply (even if it looks stupid, it's right).
     patch2.Apply(git2, self.DEFAULT_TRACKING)
     self.assertRaises2(cros_patch.ApplyPatchException,
@@ -322,9 +322,9 @@ I am the first commit.
     return self.CommitFile(repo, filename, content, commit=commit,
                            ChangeId=changeid, **kwargs)
 
-  def _CheckPaladin(self, repo, master_id, ids, extra):
+  def _CheckPaladin(self, repo, main_id, ids, extra):
     patch = self.CommitChangeIdFile(
-        repo, master_id, extra=extra,
+        repo, main_id, extra=extra,
         filename='paladincheck', content=str(_GetNumber()))
     deps = patch.PaladinDependencies(repo)
     # Assert that are parsing unique'ifies the results.
@@ -396,10 +396,10 @@ class TestLocalPatchGit(TestGitRepoPatch):
     self.sourceroot = os.path.join(self.tempdir, 'sourceroot')
 
 
-  def _MkPatch(self, source, sha1, ref='refs/heads/master', **kwds):
+  def _MkPatch(self, source, sha1, ref='refs/heads/main', **kwds):
     remote = kwds.pop('remote', constants.EXTERNAL_REMOTE)
     return self.patch_kls(source, 'chromiumos/chromite', ref,
-                          '%s/master' % remote, remote, sha1, **kwds)
+                          '%s/main' % remote, remote, sha1, **kwds)
 
   def testUpload(self):
     def ProjectDirMock(_sourceroot):
@@ -450,9 +450,9 @@ class TestUploadedLocalPatch(TestGitRepoPatch):
 
   patch_kls = cros_patch.UploadedLocalPatch
 
-  def _MkPatch(self, source, sha1, ref='refs/heads/master', **kwds):
+  def _MkPatch(self, source, sha1, ref='refs/heads/main', **kwds):
     return self.patch_kls(source, self.PROJECT, ref,
-                          '%s/master' % constants.EXTERNAL_REMOTE,
+                          '%s/main' % constants.EXTERNAL_REMOTE,
                           self.ORIGINAL_BRANCH,
                           self.ORIGINAL_SHA1,
                           kwds.pop('remote', constants.EXTERNAL_REMOTE),
@@ -482,7 +482,7 @@ class TestGerritPatch(TestGitRepoPatch):
   def test_json(self):
     return copy.deepcopy(FAKE_PATCH_JSON)
 
-  def _MkPatch(self, source, sha1, ref='refs/heads/master', **kwds):
+  def _MkPatch(self, source, sha1, ref='refs/heads/main', **kwds):
     json = self.test_json
     remote = kwds.pop('remote', constants.EXTERNAL_REMOTE)
     url_prefix = kwds.pop('url_prefix', constants.GERRIT_SSH_URL)
@@ -573,7 +573,7 @@ class PrepareRemotePatchesTest(cros_test_lib.TestCase):
 
   def MkRemote(self,
                project='my/project', original_branch='my-local',
-               ref='refs/tryjobs/elmer/patches', tracking_branch='master',
+               ref='refs/tryjobs/elmer/patches', tracking_branch='main',
                internal=False):
 
     l = [project, original_branch, ref, tracking_branch,
@@ -583,7 +583,7 @@ class PrepareRemotePatchesTest(cros_test_lib.TestCase):
 
   def assertRemote(self, patch, project='my/project',
                    original_branch='my-local',
-                   ref='refs/tryjobs/elmer/patches', tracking_branch='master',
+                   ref='refs/tryjobs/elmer/patches', tracking_branch='main',
                    internal=False):
     self.assertEqual(patch.project, project)
     self.assertEqual(patch.original_branch, original_branch)

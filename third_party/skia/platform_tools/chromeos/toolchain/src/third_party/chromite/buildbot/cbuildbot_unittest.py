@@ -43,7 +43,7 @@ class RunBuildStagesTest(cros_test_lib.MoxTempDirTestCase):
     # Always stub RunCommmand out as we use it in every method.
     self.bot_id = 'x86-generic-paladin'
     self.build_config = config.config[self.bot_id]
-    self.build_config['master'] = False
+    self.build_config['main'] = False
     self.build_config['important'] = False
 
     # Use the cbuildbot parser to create properties and populate default values.

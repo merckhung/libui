@@ -123,9 +123,9 @@ class TrybotNotFinishedError(Exception):
 def _step_succeeded(try_build, step_name):
   """Return True if the given step succeeded and False otherwise.
 
-  This function talks to the build master's JSON interface, which is slow.
+  This function talks to the build main's JSON interface, which is slow.
 
-  TODO(borenet): There are now a few places which talk to the master's JSON
+  TODO(borenet): There are now a few places which talk to the main's JSON
   interface. Maybe it'd be worthwhile to create a module which does this.
 
   Args:

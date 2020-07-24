@@ -35,7 +35,7 @@ class SkiaBloggerDesktopPageSet(page_set_module.PageSet):
     urls_list = [
       # Why: #11 (Alexa global), google property; some blogger layouts have
       # infinite scroll but more interesting
-      'http://googlewebmastercentral.blogspot.com/',
+      'http://googlewebmaincentral.blogspot.com/',
     ]
 
     for url in urls_list:

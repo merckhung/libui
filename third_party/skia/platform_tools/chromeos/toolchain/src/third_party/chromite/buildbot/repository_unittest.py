@@ -54,7 +54,7 @@ class RepositoryTests(cros_test_lib.MoxTestCase):
 
 class RepoInitTests(cros_test_lib.MoxTempDirTestCase):
 
-  def _Initialize(self, branch='master'):
+  def _Initialize(self, branch='main'):
     repo = repository.RepoRepository(constants.MANIFEST_URL, self.tempdir,
                                      branch=branch)
     repo.Initialize()
@@ -62,7 +62,7 @@ class RepoInitTests(cros_test_lib.MoxTempDirTestCase):
   def testReInitialization(self):
     """Test ability to switch between branches."""
     self._Initialize('release-R19-2046.B')
-    self._Initialize('master')
+    self._Initialize('main')
 
     # Test that a failed re-init due to bad branch doesn't leave repo in bad
     # state.

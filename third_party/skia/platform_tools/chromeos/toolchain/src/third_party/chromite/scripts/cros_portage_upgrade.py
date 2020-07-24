@@ -127,9 +127,9 @@ class Upgrader(object):
                '_missing_eclass_re',# Regexp for missing eclass in equery
                '_outdated_eclass_re',# Regexp for outdated eclass in equery
                '_emptydir',     # Path to temporary empty directory
-               '_master_archs', # Set. Archs of tables merged into master_table
-               '_master_cnt',   # Number of tables merged into master_table
-               '_master_table', # Merged table from all board runs
+               '_main_archs', # Set. Archs of tables merged into main_table
+               '_main_cnt',   # Number of tables merged into main_table
+               '_main_table', # Merged table from all board runs
                '_no_upstream_cache', # Boolean.  Delete upstream cache when done
                '_porttree',     # Reference to portage porttree object
                '_rdeps',        # Boolean, if True pass --root-deps=rdeps
@@ -151,9 +151,9 @@ class Upgrader(object):
     self._args = args
     self._targets = mps.ProcessTargets(args)
 
-    self._master_table = None
-    self._master_cnt = 0
-    self._master_archs = set()
+    self._main_table = None
+    self._main_cnt = 0
+    self._main_archs = set()
     self._upgrade_cnt = 0
 
     self._stable_repo = os.path.join(options.srcroot, 'third_party',
@@ -1592,19 +1592,19 @@ class Upgrader(object):
 
     # Assemble hash of COL_UPGRADED column names by arch.
     upgraded_cols = {}
-    for arch in self._master_archs:
+    for arch in self._main_archs:
       tmp_col = utable.UpgradeTable.COL_UPGRADED
       col = utable.UpgradeTable.GetColumnName(tmp_col, arch)
       upgraded_cols[arch] = col
 
-    table = self._master_table
+    table = self._main_table
     for row in table:
       pkg = row[table.COL_PACKAGE]
       pkg_commit_line = None
 
       # First determine how many unique upgraded versions there are.
       upgraded_versarch = {}
-      for arch in self._master_archs:
+      for arch in self._main_archs:
         upgraded_ver = row[upgraded_cols[arch]]
         if upgraded_ver:
           # This package has been upgraded for this arch.
@@ -1759,28 +1759,28 @@ class Upgrader(object):
       self._DropAnyStashedChanges()
 
     # Merge tables together after each run.
-    self._master_cnt += 1
-    self._master_archs.add(self._curr_arch)
-    if self._master_table:
-      tables = [self._master_table, self._curr_table]
-      self._master_table = mps.MergeTables(tables)
+    self._main_cnt += 1
+    self._main_archs.add(self._curr_arch)
+    if self._main_table:
+      tables = [self._main_table, self._curr_table]
+      self._main_table = mps.MergeTables(tables)
     else:
-      self._master_table = self._curr_table
-      self._master_table._arch = None
+      self._main_table = self._curr_table
+      self._main_table._arch = None
 
   def WriteTableFiles(self, csv=None):
-    """Write |self._master_table| to |csv| file, if requested."""
+    """Write |self._main_table| to |csv| file, if requested."""
 
     # Sort the table by package name, then slot
     def PkgSlotSort(row):
-      return (row[self._master_table.COL_PACKAGE],
-              row[self._master_table.COL_SLOT])
-    self._master_table.Sort(PkgSlotSort)
+      return (row[self._main_table.COL_PACKAGE],
+              row[self._main_table.COL_SLOT])
+    self._main_table.Sort(PkgSlotSort)
 
     if csv:
       filehandle = open(csv, 'w')
       oper.Notice('Writing package status as csv to %s.' % csv)
-      self._master_table.WriteCSV(filehandle)
+      self._main_table.WriteCSV(filehandle)
       filehandle.close()
     elif not self._IsInUpgradeMode():
       oper.Notice('Package status report file not requested (--to-csv).')

@@ -357,7 +357,7 @@ class BuildSpecsManager(object):
 
   def __init__(self, source_repo, manifest_repo, build_name, incr_type, force,
                branch, manifest=constants.DEFAULT_MANIFEST, dry_run=True,
-               master=False):
+               main=False):
     """Initializes a build specs manager.
     Args:
       source_repo: Repository object for the source code.
@@ -368,7 +368,7 @@ class BuildSpecsManager(object):
       branch: Branch this builder is running on.
       manifest: Manifest to use for checkout. E.g. 'full' or 'buildtools'.
       dry_run: Whether we actually commit changes we make or not.
-      master: Whether we are the master builder.
+      main: Whether we are the main builder.
     """
     self.cros_source = source_repo
     buildroot = source_repo.directory
@@ -384,7 +384,7 @@ class BuildSpecsManager(object):
     self.branch = branch
     self.manifest = manifest
     self.dry_run = dry_run
-    self.master = master
+    self.main = main
 
     # Directories and specifications are set once we load the specs.
     self.all_specs_dir = None
@@ -517,8 +517,8 @@ class BuildSpecsManager(object):
     """Publishes the manifest as the manifest for the version to others."""
     logging.info('Publishing build spec for: %s', version)
 
-    # Note: This commit message is used by master.cfg for figuring out when to
-    #       trigger slave builders.
+    # Note: This commit message is used by main.cfg for figuring out when to
+    #       trigger subordinate builders.
     commit_message = 'Automatic: Start %s %s %s' % (self.build_name,
                                                     self.branch, version)
 
@@ -610,10 +610,10 @@ class BuildSpecsManager(object):
         if not self.force and self.HasCheckoutBeenBuilt():
           return None
 
-        # If we're the master, always create a new build spec. Otherwise,
+        # If we're the main, always create a new build spec. Otherwise,
         # only create a new build spec if we've already built the existing
         # spec.
-        if self.master or not self.latest_unprocessed:
+        if self.main or not self.latest_unprocessed:
           git.CreatePushBranch(PUSH_BRANCH, self.manifest_dir, sync=False)
           version = self.GetNextVersion(version_info)
           new_manifest = self.CreateManifest()

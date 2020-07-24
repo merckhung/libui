@@ -78,7 +78,7 @@ def main(target_dir, target_file, skia_arch_type, have_neon,
   args.extend([full_path])
   # Common conditions
   args.extend(['-I', os.path.join(target_dir, 'common.gypi')])
-  # Use the debugging format. We'll use these to create one master make file.
+  # Use the debugging format. We'll use these to create one main make file.
   args.extend(['-f', 'gypd'])
 
   # Off we go...

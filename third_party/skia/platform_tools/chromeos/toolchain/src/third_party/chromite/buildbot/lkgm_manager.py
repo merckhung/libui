@@ -124,7 +124,7 @@ class LKGMManager(manifest_version.BuildSpecsManager):
 
   def __init__(self, source_repo, manifest_repo, build_name, build_type,
                incr_type, force, branch, manifest=constants.DEFAULT_MANIFEST,
-               dry_run=True, master=False):
+               dry_run=True, main=False):
     """Initialize an LKGM Manager.
 
     Args:
@@ -134,7 +134,7 @@ class LKGMManager(manifest_version.BuildSpecsManager):
     super(LKGMManager, self).__init__(
         source_repo=source_repo, manifest_repo=manifest_repo,
         manifest=manifest, build_name=build_name, incr_type=incr_type,
-        force=force, branch=branch, dry_run=dry_run, master=master)
+        force=force, branch=branch, dry_run=dry_run, main=main)
 
     self.lkgm_path = os.path.join(self.manifest_dir, self.LKGM_PATH)
     self.compare_versions_fn = _LKGMCandidateInfo.VersionCompare
@@ -352,8 +352,8 @@ class LKGMManager(manifest_version.BuildSpecsManager):
         return self.latest
       else:
         logging.info('Found nothing new to build, trying again later.')
-        logging.info('If this is a PFQ, then you should have forced the master'
-                     ', which runs cbuildbot_master')
+        logging.info('If this is a PFQ, then you should have forced the main'
+                     ', which runs cbuildbot_main')
         return None
 
     # TODO(sosa):  We only really need the overlay for the version info but we
@@ -449,7 +449,7 @@ class LKGMManager(manifest_version.BuildSpecsManager):
   def _ShouldGenerateBlameListSinceLKGM(self):
     """Returns True if we should generate the blamelist."""
     # We want to generate the blamelist only for valid pfq types and if we are
-    # building on the master branch i.e. revving the build number.
+    # building on the main branch i.e. revving the build number.
     return (self.incr_type == 'build' and
             cbuildbot_config.IsPFQType(self.build_type) and
             self.build_type != constants.CHROME_PFQ_TYPE)
