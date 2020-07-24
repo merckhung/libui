@@ -40,7 +40,7 @@ class TrybotPatchPool(object):
 
      Arguments:
        **kwargs: constraints in the form of attr=value.  I.e.,
-                 project='chromiumos/chromite', tracking_branch='master'.
+                 project='chromiumos/chromite', tracking_branch='main'.
     """
     def AttributeFilter(patch):
       for key in kwargs:

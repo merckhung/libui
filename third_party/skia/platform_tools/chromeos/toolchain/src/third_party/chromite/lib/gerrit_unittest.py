@@ -25,11 +25,11 @@ class GerritHelperTest(cros_test_lib.MoxTestCase):
     self.footer_template = (
       '{"type":"stats","rowCount":%(count)i,"runTimeMilliseconds":205}')
     self.results = (
-        '{"project":"chromiumos/platform/init","branch":"master",'
+        '{"project":"chromiumos/platform/init","branch":"main",'
         '"id":"Iee5c89d929f1850d7d4e1a4ff5f21adda800025e",'
         '"number":"1111",'
         '"subject":"init commit",'
-        '"owner":{"name":"Init master","email":"init@chromium.org"},'
+        '"owner":{"name":"Init main","email":"init@chromium.org"},'
         '"currentPatchSet":{"number":"2","ref":"refs/changes/72/5172/1",'
             '"revision":"ff10979dd360e75ff21f5cf53b7f8647578785ef"},'
         '"url":"http://gerrit.chromium.org/gerrit/1111",'
@@ -38,11 +38,11 @@ class GerritHelperTest(cros_test_lib.MoxTestCase):
         '"open":true,"'
         'status":"NEW"}'
         '\n'
-        '{"project":"chromiumos/manifests","branch":"master",'
+        '{"project":"chromiumos/manifests","branch":"main",'
         '"id":"Iee5c89d929f1850d7d4e1a4ff5f21adda800025d",'
         '"number":"1111",'
         '"subject":"Test for filtered repos",'
-        '"owner":{"name":"Init master","email":"init@chromium.org"},'
+        '"owner":{"name":"Init main","email":"init@chromium.org"},'
         '"currentPatchSet":{"number":"2","ref":"refs/changes/72/5172/1",'
             '"revision":"ff10979dd360e75ff21f5cf53b7f8647578785ef"},'
         '"url":"http://gerrit.chromium.org/gerrit/1110",'
@@ -51,13 +51,13 @@ class GerritHelperTest(cros_test_lib.MoxTestCase):
         '"open":true,"'
         'status":"NEW"}'
         '\n'
-        '{"project":"tacos/chromite","branch":"master",'
+        '{"project":"tacos/chromite","branch":"main",'
         '"id":"Iee5c89d929f1850d7d4e1a4ff5f21adda800025f",'
         '"currentPatchSet":{"number":"2","ref":"refs/changes/72/5172/1",'
             '"revision":"ff10979dd360e75ff21f5cf53b7f8647578785ef"},'
         '"number":"1112",'
         '"subject":"chromite commit",'
-        '"owner":{"name":"Chromite Master","email":"chromite@chromium.org"},'
+        '"owner":{"name":"Chromite Main","email":"chromite@chromium.org"},'
         '"url":"http://gerrit.chromium.org/gerrit/1112",'
         '"lastUpdated":1311024529,'
         '"sortKey":"00166e8700001052",'
@@ -65,13 +65,13 @@ class GerritHelperTest(cros_test_lib.MoxTestCase):
         'status":"NEW"}\n'
         ) + self.footer_template % {'count':1}
     self.merged_record = (
-        '{"project":"tacos/chromite","branch":"master",'
+        '{"project":"tacos/chromite","branch":"main",'
         '"id":"Iee5c89d929f1850d7d4e1a4ff5f21adda8000250",'
         '"currentPatchSet":{"number":"2","ref":"refs/changes/72/5172/1",'
             '"revision":"ff10979dd360e75ff21f5cf53b7f8647578785ea"},'
         '"number":"1112",'
         '"subject":"chromite commit",'
-        '"owner":{"name":"Chromite Master","email":"chromite@chromium.org"},'
+        '"owner":{"name":"Chromite Main","email":"chromite@chromium.org"},'
         '"url":"http://gerrit.chromium.org/gerrit/1112",'
         '"lastUpdated":1311024529,'
         '"sortKey":"00166e8700001052",'
@@ -195,14 +195,14 @@ class GerritHelperTest(cros_test_lib.MoxTestCase):
     """Verifies we can return the correct sha1 from mock data."""
     self.mox.StubOutWithMock(cros_build_lib, 'RunCommandWithRetries')
     my_hash = 'sadfjaslfkj2135'
-    my_branch = 'master'
+    my_branch = 'main'
     result = self.mox.CreateMock(cros_build_lib.CommandResult)
     result.returncode = 0
     result.output = '   '.join([my_hash, my_branch])
     cros_build_lib.RunCommandWithRetries(
         3, ['git', 'ls-remote',
             'ssh://gerrit.chromium.org:29418/tacos/chromite',
-            'refs/heads/master'],
+            'refs/heads/main'],
         redirect_stdout=True, print_cmd=True).AndReturn(result)
     self.mox.ReplayAll()
     helper = self._GetHelper()
@@ -213,9 +213,9 @@ class GerritHelperTest(cros_test_lib.MoxTestCase):
   def testGetLatestSHA1ForProject4Realz(self):
     """Verify we can check the latest hash from chromite."""
     helper = self._GetHelper()
-    cros_build_lib.Info('The current sha1 on master for chromite is: %s' %
+    cros_build_lib.Info('The current sha1 on main for chromite is: %s' %
                         helper.GetLatestSHA1ForBranch('chromiumos/chromite',
-                                                      'master'))
+                                                      'main'))
 
   def testSetReviewers(self):
     helper = self._GetHelper()
@@ -238,7 +238,7 @@ class GerritHelperTest(cros_test_lib.MoxTestCase):
 class GerritQueryTests(cros_test_lib.MoxTestCase):
 
   def setUp(self):
-    raw_json = ('{"project":"chromiumos/chromite","branch":"master","id":'
+    raw_json = ('{"project":"chromiumos/chromite","branch":"main","id":'
              '"Icb8e1d315d465a077ffcddd7d1ab2307573017d5","number":"2144",'
              '"subject":"Add functionality to cbuildbot to patch in a set '
              'of Gerrit CL\u0027s","owner":{"name":"Ryan Cui","email":'

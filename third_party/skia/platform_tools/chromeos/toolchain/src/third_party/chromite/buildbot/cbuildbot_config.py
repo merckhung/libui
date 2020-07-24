@@ -207,13 +207,13 @@ _settings = dict(
 # profile -- The profile of the variant to set up and build.
   profile=None,
 
-# master -- This bot pushes changes to the overlays.
-  master=False,
+# main -- This bot pushes changes to the overlays.
+  main=False,
 
-# important -- Master bot uses important bots to determine overall status.
-#              i.e. if master bot succeeds and other important slaves succeed
-#              then the master will uprev packages.  This should align
-#              with info vs. closer except for the master and options.tests.
+# important -- Main bot uses important bots to determine overall status.
+#              i.e. if main bot succeeds and other important subordinates succeed
+#              then the main will uprev packages.  This should align
+#              with info vs. closer except for the main and options.tests.
   important=False,
 
 # internal -- Whether this is an internal build config.
@@ -266,7 +266,7 @@ _settings = dict(
   chroot_replace=False,
 
 # uprev -- Uprevs the local ebuilds to build new changes since last stable.
-#          build.  If master then also pushes these changes on success.
+#          build.  If main then also pushes these changes on success.
 #          Note that we uprev on just about every bot config because it gives us
 #          a more deterministic build system (the tradeoff being that some bots
 #          build from source more frequently than if they never did an uprev).
@@ -283,7 +283,7 @@ _settings = dict(
 
 # push_overlays -- Select what overlays to push at. This should be a subset of
 #                  overlays for the particular builder.  Must be None if
-#                  not a master.  There should only be one master bot pushing
+#                  not a main.  There should only be one main bot pushing
 #                  changes to each overlay per branch.
   push_overlays=None,
 
@@ -780,7 +780,7 @@ chromium_pfq = _config(
   upload_hw_test_artifacts=True,
 )
 
-# TODO(davidjames): Convert this to an external config once the unified master
+# TODO(davidjames): Convert this to an external config once the unified main
 # logic is ready.
 internal_chromium_pfq = internal.derive(
   chromium_pfq,
@@ -791,7 +791,7 @@ internal_chromium_pfq = internal.derive(
 
 internal_chromium_pfq.add_config('x86-generic-chromium-pfq',
   boards=['x86-generic'],
-  master=True,
+  main=True,
   push_overlays=constants.BOTH_OVERLAYS,
 )
 
@@ -1102,18 +1102,18 @@ sonic = _config(
 )
 
 internal_pfq_branch.add_config('x86-alex-pre-flight-branch',
-  master=True,
+  main=True,
   push_overlays=constants.BOTH_OVERLAYS,
   boards=['x86-alex'],
 )
 
-### Master paladin (CQ builder).
+### Main paladin (CQ builder).
 
 internal_paladin.add_config('mario-paladin',
-  master=True,
+  main=True,
   push_overlays=constants.BOTH_OVERLAYS,
   boards=['x86-mario'],
-  gs_path='gs://chromeos-x86-mario/pre-flight-master',
+  gs_path='gs://chromeos-x86-mario/pre-flight-main',
   paladin_builder_name='mario paladin',
   vm_tests=constants.SIMPLE_AU_TEST_TYPE,
 )
@@ -1268,11 +1268,11 @@ _release = full.derive(official, internal,
   description="Release Builds (canary) (internal)",
 )
 
-### Master release config.
+### Main release config.
 
 _release.add_config('x86-mario-release',
   boards=['x86-mario'],
-  master=True,
+  main=True,
 )
 
 ### Release config groups.
@@ -1540,7 +1540,7 @@ def _GetDisplayPosition(config_name, type_order=CONFIG_TYPE_DUMP_ORDER):
 
 
 def _InjectDisplayPosition(config_source):
-  """Add field to help buildbot masters order builders on the waterfall."""
+  """Add field to help buildbot mains order builders on the waterfall."""
   def _GetSortKey(items):
     my_config = items[1]
     # Allow configs to override the display_position.

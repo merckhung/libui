@@ -4906,9 +4906,9 @@ a9;2720
 # string table management
 #
 class StringTable:
-  def __init__( self, name_list, master_table_name ):
+  def __init__( self, name_list, main_table_name ):
     self.names        = name_list
-    self.master_table = master_table_name
+    self.main_table = main_table_name
     self.indices      = {}
     index             = 0
 
@@ -4920,7 +4920,7 @@ class StringTable:
 
   def dump( self, file ):
     write = file.write
-    write( "  static const char  " + self.master_table +
+    write( "  static const char  " + self.main_table +
            "[" + repr( self.total ) + "] =\n" )
     write( "  {\n" )
 
@@ -4937,7 +4937,7 @@ class StringTable:
     write( "#define " + macro_name + "  " + repr( len( sublist ) ) + "\n\n" )
 
     write( "  /* Values are offsets into the `" +
-           self.master_table + "' table */\n\n" )
+           self.main_table + "' table */\n\n" )
     write( "  static const short  " + table_name +
            "[" + macro_name + "] =\n" )
     write( "  {\n" )

@@ -27,7 +27,7 @@ class NonClassTests(cros_test_lib.MoxTestCase):
     self.mox.StubOutWithMock(cros_build_lib, 'RunCommand')
     self.mox.StubOutWithMock(cros_build_lib, 'RunCommandCaptureOutput')
     self._branch = 'test_branch'
-    self._target_manifest_branch = 'cros/master'
+    self._target_manifest_branch = 'cros/main'
 
   def testPushChange(self):
     git_log = 'Marking test_one as stable\nMarking test_two as stable\n'
@@ -44,14 +44,14 @@ class NonClassTests(cros_test_lib.MoxTestCase):
     cros_mark_as_stable._DoWeHaveLocalCommits(
         self._branch, self._target_manifest_branch, '.').AndReturn(True)
     git.GetTrackingBranch('.', for_push=True).AndReturn(
-        ['gerrit', 'refs/remotes/gerrit/master'])
-    git.SyncPushBranch('.', 'gerrit', 'refs/remotes/gerrit/master')
+        ['gerrit', 'refs/remotes/gerrit/main'])
+    git.SyncPushBranch('.', 'gerrit', 'refs/remotes/gerrit/main')
     cros_mark_as_stable._DoWeHaveLocalCommits(
-        self._branch, 'refs/remotes/gerrit/master', '.').AndReturn(True)
+        self._branch, 'refs/remotes/gerrit/main', '.').AndReturn(True)
     result = cros_build_lib.CommandResult(output=git_log)
     cros_build_lib.RunCommandCaptureOutput(
         ['git', 'log', '--format=format:%s%n%n%b',
-         'refs/remotes/gerrit/master..%s' % self._branch],
+         'refs/remotes/gerrit/main..%s' % self._branch],
         cwd='.').AndReturn(result)
     git.CreatePushBranch('merge_branch', '.')
     git.RunGit('.', ['merge', '--squash', self._branch])

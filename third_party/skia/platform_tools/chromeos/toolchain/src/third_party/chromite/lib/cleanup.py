@@ -81,9 +81,9 @@ class EnforcedCleanupSection(object):
           pass
       os._exit(0)
 
-    # Allow masterpid context managers to run in this case, since we're
+    # Allow mainpid context managers to run in this case, since we're
     # explicitly designed for this cleanup.
-    cros_build_lib.MasterPidContextManager.ALTERNATE_MASTER_PID = os.getpid()
+    cros_build_lib.MainPidContextManager.ALTERNATE_MASTER_PID = os.getpid()
 
     raise RuntimeError("Parent exited uncleanly; forcing cleanup code to run.")
 

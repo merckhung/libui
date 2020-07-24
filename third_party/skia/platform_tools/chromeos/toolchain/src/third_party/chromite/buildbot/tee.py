@@ -77,7 +77,7 @@ class _TeeProcess(multiprocessing.Process):
   """Replicate output to multiple file handles."""
 
   def __init__(self, output_filenames, complain, error_fd,
-               master_pid):
+               main_pid):
     """Write to stdout and supplied filenames.
 
     Args:
@@ -85,7 +85,7 @@ class _TeeProcess(multiprocessing.Process):
       complain: Print a warning if we get EAGAIN errors.
       error: The fd to write exceptions/errors to during
         shutdown.
-      master_pid: Pid to SIGTERM if we shutdown uncleanly.
+      main_pid: Pid to SIGTERM if we shutdown uncleanly.
     """
 
     self._reader_pipe, self.writer_pipe = os.pipe()
@@ -94,7 +94,7 @@ class _TeeProcess(multiprocessing.Process):
     # Dupe the fd on the offchance it's stdout/stderr,
     # which we screw with.
     self._error_handle = os.fdopen(os.dup(error_fd), 'w', 0)
-    self.master_pid = master_pid
+    self.main_pid = main_pid
     multiprocessing.Process.__init__(self)
 
   def _CloseUnnecessaryFds(self):
@@ -147,7 +147,7 @@ class _TeeProcess(multiprocessing.Process):
 
       if failed:
         try:
-          os.kill(self.master_pid, signal.SIGTERM)
+          os.kill(self.main_pid, signal.SIGTERM)
         except Exception, e:
           self._error_handle.write("\nTee failed signaling %s\n" % e)
 
@@ -159,11 +159,11 @@ class _TeeProcess(multiprocessing.Process):
       os._exit(0)
 
 
-class Tee(cros_build_lib.MasterPidContextManager):
+class Tee(cros_build_lib.MainPidContextManager):
   """Class that handles tee-ing output to a file."""
   def __init__(self, output_file):
     """Initializes object with path to log file."""
-    cros_build_lib.MasterPidContextManager.__init__(self)
+    cros_build_lib.MainPidContextManager.__init__(self)
     self._file = output_file
     self._old_stdout = None
     self._old_stderr = None

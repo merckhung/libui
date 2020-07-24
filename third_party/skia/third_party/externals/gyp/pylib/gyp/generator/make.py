@@ -1975,7 +1975,7 @@ def GenerateOutput(target_list, target_dicts, data, params):
   def CalculateMakefilePath(build_file, base_name):
     """Determine where to write a Makefile for a given gyp file."""
     # Paths in gyp files are relative to the .gyp file, but we want
-    # paths relative to the source root for the master makefile.  Grab
+    # paths relative to the source root for the main makefile.  Grab
     # the path of the .gyp file as the base to relativize against.
     # E.g. "foo/bar" when we're constructing targets for "foo/bar/baz.gyp".
     base_path = gyp.common.RelativePath(os.path.dirname(build_file),

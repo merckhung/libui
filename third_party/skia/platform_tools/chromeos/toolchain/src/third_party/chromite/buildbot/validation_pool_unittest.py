@@ -71,7 +71,7 @@ class MockManifest(object):
     return project
 
   def GetProjectsLocalRevision(self, _project):
-    return 'refs/remotes/cros/master'
+    return 'refs/remotes/cros/main'
 
   def ProjectExists(self, _project):
     return True
@@ -89,7 +89,7 @@ class Base(cros_test_lib.TestCase):
 
   def MockPatch(self, change_id=None, patch_number=None, is_merged=False,
                 project='chromiumos/chromite', remote=constants.EXTERNAL_REMOTE,
-                tracking_branch='refs/heads/master', approval_timestamp=0,
+                tracking_branch='refs/heads/main', approval_timestamp=0,
                 patch=None):
     # pylint: disable=W0201
     if patch is None:
@@ -516,13 +516,13 @@ class TestPatchSeries(MoxBase):
 
 
 def MakePool(overlays=constants.PUBLIC_OVERLAYS, build_number=1,
-             builder_name='foon', is_master=True, dryrun=True, **kwds):
+             builder_name='foon', is_main=True, dryrun=True, **kwds):
   """Helper for creating ValidationPool objects for tests."""
   kwds.setdefault('changes', [])
   build_root = kwds.pop('build_root', '/fake_root')
 
   pool = validation_pool.ValidationPool(
-      overlays, build_root, build_number, builder_name, is_master,
+      overlays, build_root, build_number, builder_name, is_main,
       dryrun, **kwds)
   return pool
 
@@ -619,13 +619,13 @@ class TestCoreLogic(MoxBase):
 
     notified_patches = failures[:2]
     unnotified_patches = failures[2:]
-    master_pool = self.MakePool(dryrun=False)
-    slave_pool = self.MakePool(is_master=False)
+    main_pool = self.MakePool(dryrun=False)
+    subordinate_pool = self.MakePool(is_main=False)
 
     self.mox.StubOutWithMock(gerrit.GerritHelper, 'RemoveCommitReady')
 
     for failure in notified_patches:
-      master_pool.SendNotification(
+      main_pool.SendNotification(
           failure.patch,
           mox.StrContains('failed to apply your change'),
           failure=mox.IgnoreArg())
@@ -636,8 +636,8 @@ class TestCoreLogic(MoxBase):
       gerrit.GerritHelper.RemoveCommitReady(failure.patch, dryrun=False)
 
     self.mox.ReplayAll()
-    master_pool._HandleApplyFailure(notified_patches)
-    slave_pool._HandleApplyFailure(unnotified_patches)
+    main_pool._HandleApplyFailure(notified_patches)
+    subordinate_pool._HandleApplyFailure(unnotified_patches)
     self.mox.VerifyAll()
 
   def testSubmitPoolFailures(self):

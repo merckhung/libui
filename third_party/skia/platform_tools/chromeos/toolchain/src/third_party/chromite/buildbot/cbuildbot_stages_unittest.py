@@ -172,7 +172,7 @@ class ManifestVersionedSyncStageTest(AbstractStageTest):
   def setUp(self):
     self.source_repo = 'ssh://source/repo'
     self.manifest_version_url = 'fake manifest url'
-    self.branch = 'master'
+    self.branch = 'main'
     self.build_name = 'x86-generic'
     self.incr_type = 'branch'
 
@@ -266,13 +266,13 @@ class LKGMCandidateSyncCompletionStage(AbstractStageTest):
   def setUp(self):
     self.source_repo = 'ssh://source/repo'
     self.manifest_version_url = 'fake manifest url'
-    self.branch = 'master'
+    self.branch = 'main'
     self.build_name = 'x86-generic-paladin'
     self.build_type = constants.PFQ_TYPE
 
     self.build_config['manifest_version'] = True
     self.build_config['build_type'] = self.build_type
-    self.build_config['master'] = True
+    self.build_config['main'] = True
 
     repo = repository.RepoRepository(
       self.source_repo, self.tempdir, self.branch)
@@ -342,12 +342,12 @@ class LKGMCandidateSyncCompletionStage(AbstractStageTest):
     }
     return test_config
 
-  def testGetSlavesForMaster(self):
-    """Tests that we get the slaves for a fake unified master configuration."""
+  def testGetSubordinatesForMain(self):
+    """Tests that we get the subordinates for a fake unified main configuration."""
     test_config = self._GetTestConfig()
     self.mox.ReplayAll()
     stage = self.ConstructStage()
-    p = stage._GetSlavesForMaster(self.build_config, test_config)
+    p = stage._GetSubordinatesForMain(self.build_config, test_config)
     self.mox.VerifyAll()
 
     self.assertTrue(test_config['test3'] in p)
@@ -1057,7 +1057,7 @@ class UploadPrebuiltsStageTest(AbstractStageTest,
     Arguments:
       bot_id: Bot to upload prebuilts for.
       count: Number of assert checks that should be performed.
-      board_map: Map from slave boards to whether the bot is public.
+      board_map: Map from subordinate boards to whether the bot is public.
       public_args: List of extra arguments for public boards.
       private_args: List of extra arguments for private boards.
     """
@@ -1067,10 +1067,10 @@ class UploadPrebuiltsStageTest(AbstractStageTest,
     private_prefix = [self.CMD] + (private_args or [])
     for board, public in board_map.iteritems():
       if public or public_args:
-        public_cmd = public_prefix + ['--slave-board', board]
+        public_cmd = public_prefix + ['--subordinate-board', board]
         self.assertCommandContains(public_cmd, expected=public)
         count -= 1
-      private_cmd = private_prefix + ['--slave-board', board, '--private']
+      private_cmd = private_prefix + ['--subordinate-board', board, '--private']
       self.assertCommandContains(private_cmd, expected=not public)
       count -= 1
     if board_map:
@@ -1097,7 +1097,7 @@ class UploadPrebuiltsStageTest(AbstractStageTest,
     self.VerifyBoardMap('x86-generic-chromium-pfq', 9, board_map,
                         public_args=['--board', 'x86-generic'])
 
-  def testPaladinMasterUpload(self):
+  def testPaladinMainUpload(self):
     board_map = {'amd64-generic': True, 'x86-generic': True,
                  'x86-alex': False, 'lumpy': False, 'daisy_spring': False}
     self.VerifyBoardMap('mario-paladin', 8, board_map,
@@ -1162,7 +1162,7 @@ class PublishUprevChangesStageTest(AbstractStageTest):
   def testPush(self):
     """Test values for PublishUprevChanges."""
     self.build_config['push_overlays'] = constants.PUBLIC_OVERLAYS
-    self.build_config['master'] = True
+    self.build_config['main'] = True
 
     self.mox.ReplayAll()
     self.RunStage()
@@ -1570,8 +1570,8 @@ class BaseCQTest(StageTest):
     osutils.WriteFile(self.manifest_path, self.MANIFEST_CONTENTS)
 
   def PerformSync(self, remote='cros', committed=False, tree_open=True,
-                  tracking_branch='master', num_patches=1, runs=0):
-    """Helper to perform a basic sync for master commit queue."""
+                  tracking_branch='main', num_patches=1, runs=0):
+    """Helper to perform a basic sync for main commit queue."""
     p = MockPatch(remote=remote, tracking_branch=tracking_branch)
     my_patches = [p] * num_patches
     self.PatchObject(gerrit.GerritHelper, 'IsChangeCommitted',
@@ -1596,8 +1596,8 @@ class BaseCQTest(StageTest):
       self.sync_stage.HandleSkip()
 
 
-class SlaveCQSyncTest(BaseCQTest):
-  """Tests the CommitQueueSync stage for the paladin slaves."""
+class SubordinateCQSyncTest(BaseCQTest):
+  """Tests the CommitQueueSync stage for the paladin subordinates."""
   PALADIN_BOT_ID = 'alex-paladin'
 
   def testReload(self):
@@ -1608,10 +1608,10 @@ class SlaveCQSyncTest(BaseCQTest):
     self.ReloadPool()
 
 
-class MasterCQSyncTest(BaseCQTest):
-  """Tests the CommitQueueSync stage for the paladin masters.
+class MainCQSyncTest(BaseCQTest):
+  """Tests the CommitQueueSync stage for the paladin mains.
 
-  Tests in this class should apply both to the paladin masters and to the
+  Tests in this class should apply both to the paladin mains and to the
   Pre-CQ Launcher.
   """
   PALADIN_BOT_ID = 'mario-paladin'
@@ -1648,10 +1648,10 @@ class MasterCQSyncTest(BaseCQTest):
                       self.testCommitNonManifestChange, remote='foo', runs=1)
 
 
-class ExtendedMasterCQSyncTest(MasterCQSyncTest):
+class ExtendedMainCQSyncTest(MainCQSyncTest):
   """Additional tests for the CommitQueueSync stage.
 
-  These only apply to the paladin master and not to any other stages.
+  These only apply to the paladin main and not to any other stages.
   """
 
   def testReload(self):
@@ -1687,7 +1687,7 @@ class PreCQStatusMock(partial_mock.PartialMock):
     self.status[change] = status
 
 
-class PreCQLauncherStageTest(MasterCQSyncTest):
+class PreCQLauncherStageTest(MainCQSyncTest):
   """Tests for the PreCQLauncherStage."""
   PALADIN_BOT_ID = 'pre-cq-launcher'
   STATUS_LAUNCHING = validation_pool.ValidationPool.STATUS_LAUNCHING

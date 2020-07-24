@@ -101,7 +101,7 @@ def PrepareAndroidTree():
     CallSubProcess(
         ['repo', 'init',
          '-u', 'https://android.googlesource.com/platform/manifest',
-         '-b', 'master',
+         '-b', 'main',
          '-g', 'all,-notdefault,-device,-darwin,-mips,-x86'],
         cwd=ANDROID_DIR)
     shutil.copy(gyp_manifest, android_manifest)

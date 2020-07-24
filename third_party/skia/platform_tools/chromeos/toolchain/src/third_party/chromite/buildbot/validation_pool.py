@@ -883,7 +883,7 @@ class ValidationPool(object):
   REJECTION_GRACE_PERIOD = 30 * 60
 
   def __init__(self, overlays, build_root, build_number, builder_name,
-               is_master, dryrun, changes=None, non_os_changes=None,
+               is_main, dryrun, changes=None, non_os_changes=None,
                conflicting_changes=None, pre_cq=False):
     """Initializes an instance by setting default valuables to instance vars.
 
@@ -894,7 +894,7 @@ class ValidationPool(object):
       overlays:  One of constants.VALID_OVERLAYS.
       build_number:  Build number for this validation attempt.
       builder_name:  Builder name on buildbot dashboard.
-      is_master: True if this is the master builder for the Commit Queue.
+      is_main: True if this is the main builder for the Commit Queue.
       dryrun: If set to True, do not submit anything to Gerrit.
     Optional Args:
       changes: List of changes for this validation pool.
@@ -943,7 +943,7 @@ class ValidationPool(object):
     self.build_log = self.ConstructDashboardURL(overlays, pre_cq, builder_name,
                                                 str(build_number))
 
-    self.is_master = bool(is_master)
+    self.is_main = bool(is_main)
     self.pre_cq = pre_cq
     self.dryrun = bool(dryrun) or self.GLOBAL_DRYRUN
     self.queue = 'A trybot' if pre_cq else 'The Commit Queue'
@@ -1013,7 +1013,7 @@ class ValidationPool(object):
         (
             self._overlays,
             self.build_root, self._build_number, self._builder_name,
-            self.is_master, self.dryrun, self.changes,
+            self.is_main, self.dryrun, self.changes,
             self.non_manifest_changes,
             self.changes_that_failed_to_apply_earlier,
             self.pre_cq))
@@ -1051,7 +1051,7 @@ class ValidationPool(object):
   def AcquirePreCQPool(cls, *args, **kwargs):
     """See ValidationPool.__init__ for arguments."""
     kwargs.setdefault('pre_cq', True)
-    kwargs.setdefault('is_master', True)
+    kwargs.setdefault('is_main', True)
     return cls(*args, **kwargs)
 
   @classmethod
@@ -1099,7 +1099,7 @@ class ValidationPool(object):
       # Sync so that we are up-to-date on what is committed.
       repo.Sync()
 
-      # Only master configurations should call this method.
+      # Only main configurations should call this method.
       pool = ValidationPool(overlays, repo.directory, build_number,
                             builder_name, True, dryrun)
 
@@ -1132,7 +1132,7 @@ class ValidationPool(object):
 
   @classmethod
   def AcquirePoolFromManifest(cls, manifest, overlays, repo, build_number,
-                              builder_name, is_master, dryrun):
+                              builder_name, is_main, dryrun):
     """Acquires the current pool from a given manifest.
 
     This function assumes that you have already synced to the given manifest.
@@ -1143,14 +1143,14 @@ class ValidationPool(object):
       repo: The repo used to filter projects and to apply patches against.
       build_number: Corresponding build number for the build.
       builder_name:  Builder name on buildbot dashboard.
-      is_master: Boolean that indicates whether this is a pool for a master.
+      is_main: Boolean that indicates whether this is a pool for a main.
         config or not.
       dryrun: Don't submit anything to gerrit.
     Returns:
       ValidationPool object.
     """
     pool = ValidationPool(overlays, repo.directory, build_number, builder_name,
-                          is_master, dryrun)
+                          is_main, dryrun)
     manifest_dom = minidom.parse(manifest)
     pending_commits = manifest_dom.getElementsByTagName(
         lkgm_manager.PALADIN_COMMIT_ELEMENT)
@@ -1298,7 +1298,7 @@ class ValidationPool(object):
           raise
       raise exc[0], exc[1], exc[2]
 
-    if self.is_master:
+    if self.is_main:
       for change in applied:
         self._HandleApplySuccess(change)
 
@@ -1349,7 +1349,7 @@ class ValidationPool(object):
       TreeIsClosedException: if the tree is closed.
       FailedToSubmitAllChangesException: if we can't submit a change.
     """
-    assert self.is_master, 'Non-master builder calling SubmitPool'
+    assert self.is_main, 'Non-main builder calling SubmitPool'
     assert not self.pre_cq, 'Trybot calling SubmitPool'
 
     changes_that_failed_to_submit = []
@@ -1410,7 +1410,7 @@ class ValidationPool(object):
                         check_tree_open=check_tree_open)
 
   def SubmitPool(self, check_tree_open=True):
-    """Commits changes to Gerrit from Pool.  This is only called by a master.
+    """Commits changes to Gerrit from Pool.  This is only called by a main.
 
     Args:
       check_tree_open: Whether to check that the tree is open before submitting
@@ -1438,7 +1438,7 @@ class ValidationPool(object):
     """
     for failure in failures:
       logging.info('Change %s did not apply cleanly.', failure.patch)
-      if self.is_master:
+      if self.is_main:
         self._HandleCouldNotApply(failure)
 
   def _HandleCouldNotApply(self, failure):
@@ -1626,7 +1626,7 @@ class ValidationPool(object):
     return '\n\n'.join(msg)
 
   def HandleValidationFailure(self, messages):
-    """Handles a list of validation failure messages from slave builders.
+    """Handles a list of validation failure messages from subordinate builders.
 
     This handler parses a list of failure messages from our list of builders
     and calculates which changes were likely responsible for the failure. The

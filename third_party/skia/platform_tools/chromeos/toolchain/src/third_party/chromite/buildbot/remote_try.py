@@ -77,11 +77,11 @@ class RemoteTryJob(object):
     self.name = options.remote_description
     if self.name is None:
       self.name = ''
-      if options.branch != 'master':
+      if options.branch != 'main':
         self.name = '[%s] ' % options.branch
       self.name += ','.join(patch_list)
     self.bots = bots[:]
-    self.slaves_request = options.slaves
+    self.subordinates_request = options.subordinates
     self.description = ('name: %s\n patches: %s\nbots: %s' %
                         (self.name, patch_list, self.bots))
     self.extra_args = options.pass_through_args
@@ -106,7 +106,7 @@ class RemoteTryJob(object):
         'email' : [self.user_email],
         'extra_args' : self.extra_args,
         'name' : self.name,
-        'slaves_request' : self.slaves_request,
+        'subordinates_request' : self.subordinates_request,
         'user' : self.user,
         'version' : self.TRYJOB_FORMAT_VERSION,
         }
@@ -212,7 +212,7 @@ class RemoteTryJob(object):
                in, you are responsible for deleting the directory.  Used for
                testing.
       testjob: Submit job to the test branch of the tryjob repo.  The tryjob
-               will be ignored by production master.
+               will be ignored by production main.
       dryrun: Setting to true will run everything except the final submit step.
     """
     self.tryjob_repo = workdir

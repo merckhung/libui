@@ -730,11 +730,11 @@ class Union(Construct):
     """
     a set of overlapping fields (like unions in C). when parsing,
     all fields read the same data; when building, only the first subcon
-    (called "master") is used.
+    (called "main") is used.
 
     Parameters:
     * name - the name of the union
-    * master - the master subcon, i.e., the subcon used for building and
+    * main - the main subcon, i.e., the subcon used for building and
       calculating the total size
     * subcons - additional subcons
 
@@ -751,12 +751,12 @@ class Union(Construct):
     )
     """
     __slots__ = ["parser", "builder"]
-    def __init__(self, name, master, *subcons, **kw):
+    def __init__(self, name, main, *subcons, **kw):
         Construct.__init__(self, name)
         args = [Peek(sc) for sc in subcons]
-        args.append(MetaField(None, lambda ctx: master._sizeof(ctx)))
-        self.parser = Struct(name, Peek(master, perform_build = True), *args)
-        self.builder = Struct(name, master)
+        args.append(MetaField(None, lambda ctx: main._sizeof(ctx)))
+        self.parser = Struct(name, Peek(main, perform_build = True), *args)
+        self.builder = Struct(name, main)
     def _parse(self, stream, context):
         return self.parser._parse(stream, context)
     def _build(self, obj, stream, context):

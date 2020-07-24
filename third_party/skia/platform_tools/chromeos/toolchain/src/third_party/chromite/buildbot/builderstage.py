@@ -98,8 +98,8 @@ class BuilderStage(object):
     # Sanity checks.
     # We cannot push to overlays that we don't rev.
     assert set(push_overlays).issubset(set(overlays))
-    # Either has to be a master or not have any push overlays.
-    assert self._build_config['master'] or not push_overlays
+    # Either has to be a main or not have any push overlays.
+    assert self._build_config['main'] or not push_overlays
 
     return overlays, push_overlays
 
@@ -150,17 +150,17 @@ class BuilderStage(object):
     return binhost.output.rstrip('\n')
 
   @staticmethod
-  def _GetSlavesForMaster(build_config, configs=None):
-    """Gets the important builds corresponding to this master.
+  def _GetSubordinatesForMain(build_config, configs=None):
+    """Gets the important builds corresponding to this main.
 
     Returns:
-      A list of the slaves for this builder.
+      A list of the subordinates for this builder.
     """
     if configs is None:
       configs = cbuildbot_config.config
     builders = []
     assert build_config['manifest_version']
-    assert build_config['master']
+    assert build_config['main']
     for config in configs.itervalues():
       if (config['important'] and
           config['manifest_version'] and

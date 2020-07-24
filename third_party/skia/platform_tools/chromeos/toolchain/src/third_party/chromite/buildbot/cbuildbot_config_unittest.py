@@ -20,7 +20,7 @@ from chromite.lib import git
 from chromite.lib import parallel
 
 CHROMIUM_WATCHING_URL = ('http://src.chromium.org/chrome/trunk/tools/build/'
-    'masters/master.chromium.chromiumos/master_chromiumos_cros_cfg.py')
+    'mains/main.chromium.chromiumos/main_chromiumos_cros_cfg.py')
 
 # pylint: disable=W0212,R0904
 class CBuildBotTest(cros_test_lib.MoxTestCase):
@@ -99,22 +99,22 @@ class CBuildBotTest(cros_test_lib.MoxTestCase):
           'Config %s: push_overlays should be a subset of overlays.' %
               build_name)
 
-  def testOverlayMaster(self):
-    """Verify that only one master is pushing uprevs for each overlay."""
-    masters = {}
+  def testOverlayMain(self):
+    """Verify that only one main is pushing uprevs for each overlay."""
+    mains = {}
     for build_name, config in cbuildbot_config.config.iteritems():
       overlays = config['overlays']
       push_overlays = config['push_overlays']
-      if (overlays and push_overlays and config['uprev'] and config['master']
+      if (overlays and push_overlays and config['uprev'] and config['main']
           and not config['branch']):
-        other_master = masters.get(push_overlays)
-        err_msg = 'Found two masters for push_overlays=%s: %s and %s'
-        self.assertFalse(other_master,
-            err_msg % (push_overlays, build_name, other_master))
-        masters[push_overlays] = build_name
+        other_main = mains.get(push_overlays)
+        err_msg = 'Found two mains for push_overlays=%s: %s and %s'
+        self.assertFalse(other_main,
+            err_msg % (push_overlays, build_name, other_main))
+        mains[push_overlays] = build_name
 
-    if 'both' in masters:
-      self.assertEquals(len(masters), 1, 'Found too many masters.')
+    if 'both' in mains:
+      self.assertEquals(len(mains), 1, 'Found too many mains.')
 
   def testChromeRev(self):
     """Verify chrome_rev has an expected value"""
@@ -211,30 +211,30 @@ class CBuildBotTest(cros_test_lib.MoxTestCase):
         self.assertTrue(test_config.timeout < max_timeout,
             '%s has a hw_tests_timeout that is too large.' % build_name)
 
-  def testValidUnifiedMasterConfig(self):
-    """Make sure any unified master configurations are valid."""
+  def testValidUnifiedMainConfig(self):
+    """Make sure any unified main configurations are valid."""
     for build_name, config in cbuildbot_config.config.iteritems():
       error = 'Unified config for %s has invalid values' % build_name
-      # Unified masters must be internal and must rev both overlays.
-      if config['master']:
+      # Unified mains must be internal and must rev both overlays.
+      if config['main']:
         self.assertTrue(
             config['internal'] and config['manifest_version'], error)
-      elif not config['master'] and config['manifest_version']:
-        # Unified slaves can rev either public or both depending on whether
+      elif not config['main'] and config['manifest_version']:
+        # Unified subordinates can rev either public or both depending on whether
         # they are internal or not.
         if not config['internal']:
           self.assertEqual(config['overlays'], constants.PUBLIC_OVERLAYS, error)
         elif cbuildbot_config.IsCQType(config['build_type']):
           self.assertEqual(config['overlays'], constants.BOTH_OVERLAYS, error)
 
-  def testGetSlaves(self):
-    """Make sure every master has a sane list of slaves"""
+  def testGetSubordinates(self):
+    """Make sure every main has a sane list of subordinates"""
     for build_name, config in cbuildbot_config.config.iteritems():
-      if config['master']:
-        configs = builderstage.BuilderStage._GetSlavesForMaster(config)
+      if config['main']:
+        configs = builderstage.BuilderStage._GetSubordinatesForMain(config)
         self.assertEqual(
             len(map(repr, configs)), len(set(map(repr, configs))),
-            'Duplicate board in slaves of %s will cause upload prebuilts'
+            'Duplicate board in subordinates of %s will cause upload prebuilts'
             ' failures' % build_name)
 
   def testFactoryFirmwareValidity(self):

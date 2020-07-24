@@ -315,7 +315,7 @@ class PrebuiltUploader(object):
 
   def __init__(self, upload_location, acl, binhost_base_url,
                pkg_indexes, build_path, packages, skip_upload,
-               binhost_conf_dir, debug, target, slave_targets):
+               binhost_conf_dir, debug, target, subordinate_targets):
     """Constructor for prebuilt uploader object.
 
     This object can upload host or prebuilt files to Google Storage.
@@ -335,7 +335,7 @@ class PrebuiltUploader(object):
       binhost_conf_dir: Directory where to store binhost.conf files.
       debug: Don't push or upload prebuilts.
       target: BuildTarget managed by this builder.
-      slave_targets: List of BuildTargets managed by slave builders.
+      subordinate_targets: List of BuildTargets managed by subordinate builders.
     """
     self._upload_location = upload_location
     self._acl = acl
@@ -348,7 +348,7 @@ class PrebuiltUploader(object):
     self._binhost_conf_dir = binhost_conf_dir
     self._debug = debug
     self._target = target
-    self._slave_targets = slave_targets
+    self._subordinate_targets = subordinate_targets
 
   def _ShouldFilterPackage(self, pkg):
     if not self._packages:
@@ -439,7 +439,7 @@ class PrebuiltUploader(object):
 
   def _GetTargets(self):
     """Retuns the list of targets to use."""
-    targets = self._slave_targets[:]
+    targets = self._subordinate_targets[:]
     if self._target:
       targets.append(self._target)
 
@@ -465,7 +465,7 @@ class PrebuiltUploader(object):
       sync_binhost_conf: If set, update binhost config file in
           chromiumos-overlay for the host.
     """
-    # Slave boards are listed before the master board so that the master board
+    # Subordinate boards are listed before the main board so that the main board
     # takes priority (i.e. x86-generic preflight host prebuilts takes priority
     # over preflight host prebuilts from other builders.)
     binhost_urls = []
@@ -569,18 +569,18 @@ def Usage(parser, msg):
   sys.exit(1)
 
 
-def _AddSlaveBoard(_option, _opt_str, value, parser):
-  """Callback that adds a slave board to the list of slave targets."""
-  parser.values.slave_targets.append(BuildTarget(value))
+def _AddSubordinateBoard(_option, _opt_str, value, parser):
+  """Callback that adds a subordinate board to the list of subordinate targets."""
+  parser.values.subordinate_targets.append(BuildTarget(value))
 
 
-def _AddSlaveProfile(_option, _opt_str, value, parser):
-  """Callback that adds a slave profile to the list of slave targets."""
-  if not parser.values.slave_targets:
-    Usage(parser, 'Must specify --slave-board before --slave-profile')
-  if parser.values.slave_targets[-1].profile is not None:
-    Usage(parser, 'Cannot specify --slave-profile twice for same board')
-  parser.values.slave_targets[-1].profile = value
+def _AddSubordinateProfile(_option, _opt_str, value, parser):
+  """Callback that adds a subordinate profile to the list of subordinate targets."""
+  if not parser.values.subordinate_targets:
+    Usage(parser, 'Must specify --subordinate-board before --subordinate-profile')
+  if parser.values.subordinate_targets[-1].profile is not None:
+    Usage(parser, 'Cannot specify --subordinate-profile twice for same board')
+  parser.values.subordinate_targets[-1].profile = value
 
 
 def ParseOptions():
@@ -608,15 +608,15 @@ def ParseOptions():
                     help='Path to place toolchain tarballs in the sdk tree.')
   parser.add_option('', '--profile', dest='profile', default=None,
                     help='Profile that was built on this machine')
-  parser.add_option('', '--slave-board', default=[], action='callback',
-                    dest='slave_targets', type='string',
-                    callback=_AddSlaveBoard,
-                    help='Board type that was built on a slave machine. To '
-                         'add a profile to this board, use --slave-profile.')
-  parser.add_option('', '--slave-profile', action='callback', type='string',
-                    callback=_AddSlaveProfile,
-                    help='Board profile that was built on a slave machine. '
-                         'Applies to previous slave board.')
+  parser.add_option('', '--subordinate-board', default=[], action='callback',
+                    dest='subordinate_targets', type='string',
+                    callback=_AddSubordinateBoard,
+                    help='Board type that was built on a subordinate machine. To '
+                         'add a profile to this board, use --subordinate-profile.')
+  parser.add_option('', '--subordinate-profile', action='callback', type='string',
+                    callback=_AddSubordinateProfile,
+                    help='Board profile that was built on a subordinate machine. '
+                         'Applies to previous subordinate board.')
   parser.add_option('-p', '--build-path', dest='build_path',
                     help='Path to the directory containing the chroot')
   parser.add_option('', '--packages', action='append',
@@ -683,14 +683,14 @@ def ParseOptions():
   if options.board:
     target = BuildTarget(options.board, options.profile)
 
-  if target in options.slave_targets:
-    Usage(parser, 'Error: --board/--profile must not also be a slave target.')
+  if target in options.subordinate_targets:
+    Usage(parser, 'Error: --board/--profile must not also be a subordinate target.')
 
-  if len(set(options.slave_targets)) != len(options.slave_targets):
-    Usage(parser, 'Error: --slave-boards must not have duplicates.')
+  if len(set(options.subordinate_targets)) != len(options.subordinate_targets):
+    Usage(parser, 'Error: --subordinate-boards must not have duplicates.')
 
-  if options.slave_targets and options.git_sync:
-    Usage(parser, 'Error: --slave-boards is not compatible with --git-sync')
+  if options.subordinate_targets and options.git_sync:
+    Usage(parser, 'Error: --subordinate-boards is not compatible with --git-sync')
 
   if (options.upload_board_tarball and options.skip_upload and
       options.board == 'amd64-host'):
@@ -753,13 +753,13 @@ def main(_argv):
                               pkg_indexes, options.build_path,
                               options.packages, options.skip_upload,
                               options.binhost_conf_dir, options.debug,
-                              target, options.slave_targets)
+                              target, options.subordinate_targets)
 
   if options.sync_host:
     uploader.SyncHostPrebuilts(version, options.key, options.git_sync,
                                options.sync_binhost_conf)
 
-  if options.board or options.slave_targets:
+  if options.board or options.subordinate_targets:
     uploader.SyncBoardPrebuilts(version, options.key, options.git_sync,
                                 options.sync_binhost_conf,
                                 options.upload_board_tarball,

@@ -807,7 +807,7 @@ class TestManifestCheckout(cros_test_lib.TempDirTestCase):
         <manifest>
           <include name="include-target.xml" />
           <include name="empty.xml" />
-          <project name="monkeys" remote="foon" revision="master" />
+          <project name="monkeys" remote="foon" revision="main" />
         </manifest>""")
     # First, verify it properly explodes if the include can't be found.
     self.assertRaises(EnvironmentError,
@@ -839,7 +839,7 @@ class TestManifestCheckout(cros_test_lib.TempDirTestCase):
     repo_root = self.tempdir
 
     # pylint: disable=W0613
-    def reconfig(merge='master', origin='origin'):
+    def reconfig(merge='main', origin='origin'):
       if merge is not None:
         merge = 'refs/heads/%s' % merge
       for key in ('merge', 'origin'):
@@ -852,13 +852,13 @@ class TestManifestCheckout(cros_test_lib.TempDirTestCase):
 
     # First, verify our assumptions about a fresh repo init are correct.
     self.assertEqual('default', git.GetCurrentBranch(manifest))
-    self.assertEqual('master', func(repo_root))
+    self.assertEqual('main', func(repo_root))
 
     # Ensure we can handle a missing origin; this can occur jumping between
     # branches, and can be worked around.
     reconfig(origin=None)
     self.assertEqual('default', git.GetCurrentBranch(manifest))
-    self.assertEqual('master', func(repo_root))
+    self.assertEqual('main', func(repo_root))
 
     # TODO(ferringb): convert this over to assertRaises2
     def assertExcept(message, **kwds):
@@ -878,7 +878,7 @@ class TestManifestCheckout(cros_test_lib.TempDirTestCase):
 
     # Ensure we detect if we're on the wrong branch, even if it has
     # tracking setup.
-    git.RunGit(manifest, ['checkout', '-t', 'origin/master', '-b', 'test'])
+    git.RunGit(manifest, ['checkout', '-t', 'origin/main', '-b', 'test'])
     assertExcept("It should be checked out to 'default'")
 
     # Ensure we handle detached HEAD w/ an appropriate exception.

@@ -295,9 +295,9 @@ def PostUploadHook(cl, change, output_api):
   This hook does the following:
   * Adds a link to preview docs changes if there are any docs changes in the CL.
   * Adds 'NOTRY=true' if the CL contains only docs changes.
-  * Adds 'NOTREECHECKS=true' for non master branch changes since they do not
-    need to be gated on the master branch's tree.
-  * Adds 'NOTRY=true' for non master branch changes since trybots do not yet
+  * Adds 'NOTREECHECKS=true' for non main branch changes since they do not
+    need to be gated on the main branch's tree.
+  * Adds 'NOTRY=true' for non main branch changes since trybots do not yet
     work on them.
   """
 
@@ -341,17 +341,17 @@ def PostUploadHook(cl, change, output_api):
               'Automatically added a link to preview the docs changes to the '
               'CL\'s description'))
 
-    # If the target ref is not master then add NOTREECHECKS=true and NOTRY=true
+    # If the target ref is not main then add NOTREECHECKS=true and NOTRY=true
     # to the CL's description if it does not already exist there.
     target_ref = rietveld_obj.get_issue_properties(issue, False).get(
         'target_ref', '')
-    if target_ref != 'refs/heads/master':
+    if target_ref != 'refs/heads/main':
       if not re.search(
           r'^NOTREECHECKS=true$', new_description, re.M | re.I):
         new_description += "\nNOTREECHECKS=true"
         results.append(
             output_api.PresubmitNotifyResult(
-                'Branch changes do not need to rely on the master branch\'s '
+                'Branch changes do not need to rely on the main branch\'s '
                 'tree status. Automatically added \'NOTREECHECKS=true\' to the '
                 'CL\'s description'))
       if not re.search(
@@ -359,7 +359,7 @@ def PostUploadHook(cl, change, output_api):
         new_description += "\nNOTRY=true"
         results.append(
             output_api.PresubmitNotifyResult(
-                'Trybots do not yet work for non-master branches. '
+                'Trybots do not yet work for non-main branches. '
                 'Automatically added \'NOTRY=true\' to the CL\'s description'))
 
 

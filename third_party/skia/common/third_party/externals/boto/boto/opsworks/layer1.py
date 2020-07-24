@@ -698,8 +698,8 @@ class OpsWorksConnection(AWSQueryConnection):
         + php-app: A PHP App Server layer
         + nodejs-app: A Node.js App Server layer
         + memcached: A Memcached layer
-        + db-master: A MySQL layer
-        + monitoring-master: A Ganglia layer
+        + db-main: A MySQL layer
+        + monitoring-main: A Ganglia layer
         + custom: A custom layer
 
         :type name: string
